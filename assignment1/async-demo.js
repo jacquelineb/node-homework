@@ -33,7 +33,7 @@ fs.writeFile(sampleTxt, 'Original Text', (err) => {
       console.error(err);
       return;
     }
-    console.log(data);
+    console.log(`First write: ${data}`);
     fs.writeFile(sampleTxt, 'Updated Text', (err) => {
       if (err) {
         console.error(err);
@@ -44,7 +44,7 @@ fs.writeFile(sampleTxt, 'Original Text', (err) => {
           console.error(err);
           return;
         }
-        console.log(data);
+        console.log(`Second write: ${data}`);
       });
     });
   });
