@@ -43,7 +43,7 @@ function welcomeMsg(name) {
   return `Hello, ${name}`;
 }
 
-export welcomeMsg; // expose welcomeMsg()
+export { welcomeMsg }; // expose welcomeMsg()
 
 // app.js
 import { welcomeMsg } from './utils.js'; // load welcomeMsg()
