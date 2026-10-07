@@ -8,9 +8,9 @@ if (!fs.existsSync(sampleFilesDir)) {
 }
 
 // OS module
-console.log(`Platform: ${os.platform}`);
+console.log(`Platform: ${os.platform()}`);
 console.log(`CPU: ${os.cpus()[0].model}`);
-console.log(`Total Memory: ${os.totalmem}`);
+console.log(`Total Memory: ${os.totalmem()}`);
 
 // Path module
 console.log(`Joined path: ${path.join(__dirname, 'file.txt')}`);
