@@ -6,7 +6,7 @@ const { randomUUID } = require('crypto');
 const app = express();
 
 app.use(express.json());
-app.use('/images', express.static(path.join(__dirname, 'public')));
+app.use('/images', express.static(path.join(__dirname, 'public/images')));
 
 // Assignment 3b and 3c ask you to add middleware in this file.
 app.use((req, res, next) => {
