@@ -1,11 +1,18 @@
 const express = require('express');
 const dogsRouter = require('./routes/dogs');
+const { randomUUID } = require('crypto');
 
 const app = express();
 
-// Assignment 3b and 3c ask you to add middleware in this file.
 app.use(express.json());
 app.use(express.static('public/images'));
+
+// Assignment 3b and 3c ask you to add middleware in this file.
+app.use((req, res, next) => {
+  req.requestId = randomUUID();
+  res.setHeader('X-Request-Id', req.requestId);
+  next();
+});
 
 app.use('/', dogsRouter); // Do not remove this line
 
