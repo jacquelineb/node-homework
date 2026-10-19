@@ -16,13 +16,13 @@ function logon(req, res) {
     global.user_id = user;
     res.status(200).json({ name: user.name, email });
   } else {
-    res.status(401);
+    return res.status(401);
   }
 }
 
 function logoff(req, res) {
   global.user_id = null;
-  res.status(200);
+  return res.status(200);
 }
 
 module.exports = {
