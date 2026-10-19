@@ -1,7 +1,7 @@
 function register(req, res) {
   const { name, email, password } = req.body;
   const user = { name, email, password };
-  global.users = [user];
+  global.users.push(user);
   global.user_id = user;
   res.status(201).json({
     name,
