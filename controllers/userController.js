@@ -16,7 +16,7 @@ function logon(req, res) {
     global.user_id = user;
     res.status(200).json({ name: user.name, email });
   } else {
-    return res.status(401);
+    res.status(401).json({ message: 'Unauthorized' });
   }
 }
 
