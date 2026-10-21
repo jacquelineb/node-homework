@@ -22,7 +22,7 @@ function logon(req, res) {
 
 function logoff(req, res) {
   global.user_id = null;
-  return res.status(200);
+  res.sendStatus(200);
 }
 
 module.exports = {
