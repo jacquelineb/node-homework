@@ -58,6 +58,25 @@ function show(req, res) {
   return res.status(200).json(sanitizedTask);
 }
 
+function update(req, res) {
+  if (!req.body) {
+    req.body = {};
+  }
+  const { error, value } = patchTaskSchema.validate(req.body, { abortEarly: false });
+  if (error) {
+    return res.status(400).json({ message: error.details.message });
+  }
+
+  const taskId = parseInt(req.params?.int);
+  const task = global.tasks.find((t) => t.id === taskId && t.userId === global.user_id.email);
+  if (!task) {
+    return res.status(404).json({ message: 'No matching task found.' });
+  }
+  Object.assign(task, value); // Merge the validated patch fields into the stored task
+  const { userId, ...sanitizedTask } = task;
+  return res.status(200).json(sanitizedTask);
+}
+
 module.exports = {
   create,
   index,
