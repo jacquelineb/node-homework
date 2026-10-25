@@ -1,4 +1,3 @@
-const { sanitize } = require('express-xss-sanitizer');
 const { taskSchema, patchTaskSchema } = require('../validation/taskSchema');
 
 const taskCounter = (() => {
