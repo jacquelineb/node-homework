@@ -31,7 +31,7 @@ async function create(req, res) {
 function index(req, res) {
   // Return the tasks for the logged-in user.
   const userTasks = global.tasks.filter((task) => task.userId === global.user_id.email);
-  if (!userTasks) {
+  if (userTasks.length === 0) {
     return res.status(404).json({ message: 'No tasks found.' });
   }
 
