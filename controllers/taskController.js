@@ -40,7 +40,7 @@ function index(req, res) {
     const { userId, ...sanitizedTask } = task;
     return sanitizedTask;
   });
-  return res.status(200).json({ tasks: sanitizedTasks });
+  return res.status(200).json(sanitizedTasks);
 }
 
 function show(req, res) {
@@ -95,7 +95,7 @@ function deleteTask(req, res) {
     const { userId, ...sanitizedTask } = task;
     return sanitizedTask;
   });
-  return res.status(200).json({ tasks: sanitizedTasks });
+  return res.status(200).json(sanitizedTasks);
 }
 
 module.exports = {
