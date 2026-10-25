@@ -77,6 +77,28 @@ function update(req, res) {
   return res.status(200).json(sanitizedTask);
 }
 
+function deleteTask(req, res) {
+  const taskId = parseInt(req.params?.id);
+  if (isNaN(taskId)) {
+    return res.status(400).json({ message: 'Invalid task ID.' });
+  }
+
+  const indexOfTaskToDelete = global.tasks.findIndex(
+    (t) => t.id === taskId && t.userId === global.user_id.email,
+  );
+
+  if (indexOfTaskToDelete === -1) {
+    return res.status(404).json({ message: 'No matching task found.' });
+  }
+
+  global.tasks.splice(indexOfTaskToDelete, 1);
+  const sanitizedTasks = global.tasks.map((task) => {
+    const { userId, ...sanitizedTask } = task;
+    return sanitizedTask;
+  });
+  return res.status(200).json({ tasks: sanitizedTasks });
+}
+
 module.exports = {
   create,
   index,
