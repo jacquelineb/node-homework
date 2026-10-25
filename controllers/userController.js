@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 const util = require('util');
 const scrypt = util.promisify(crypto.scrypt);
-const userSchema = require('../validation/userSchema');
+const { userSchema } = require('../validation/userSchema');
 
 async function hashPassword(password) {
   const salt = crypto.randomBytes(16).toString('hex');
