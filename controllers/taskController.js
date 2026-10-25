@@ -90,12 +90,10 @@ function deleteTask(req, res) {
     return res.status(404).json({ message: 'No matching task found.' });
   }
 
+  const deletedTask = { ...global.tasks[indexOfTaskToDelete] };
   global.tasks.splice(indexOfTaskToDelete, 1);
-  const sanitizedTasks = global.tasks.map((task) => {
-    const { userId, ...sanitizedTask } = task;
-    return sanitizedTask;
-  });
-  return res.status(200).json(sanitizedTasks);
+  const { userId, ...sanitizedTask } = deletedTask;
+  return res.status(200).json(sanitizedTask);
 }
 
 module.exports = {
