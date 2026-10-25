@@ -63,7 +63,7 @@ function update(req, res) {
   }
   const { error, value } = patchTaskSchema.validate(req.body, { abortEarly: false });
   if (error) {
-    return res.status(400).json({ message: error.details.message });
+    return res.status(400).json({ message: 'Unable to update task with the provided data.' });
   }
 
   const taskId = parseInt(req.params?.id);
