@@ -66,7 +66,7 @@ function update(req, res) {
     return res.status(400).json({ message: error.details.message });
   }
 
-  const taskId = parseInt(req.params?.int);
+  const taskId = parseInt(req.params?.id);
   const task = global.tasks.find((t) => t.id === taskId && t.userId === global.user_id.email);
   if (!task) {
     return res.status(404).json({ message: 'No matching task found.' });
