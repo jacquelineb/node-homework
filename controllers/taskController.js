@@ -1,4 +1,8 @@
 const { taskSchema, patchTaskSchema } = require('../validation/taskSchema');
+const { Pool } = require('pg');
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
 
 const taskCounter = (() => {
   let lastTaskNumber = 0;
@@ -18,14 +22,14 @@ async function create(req, res) {
     return res.status(400).json({ message: 'Unable to create task.' });
   }
 
-  const newTask = {
-    id: taskCounter(),
-    userId: global.user_id.email,
-    ...value,
-  };
-  global.tasks.push(newTask);
-  const { userId, ...sanitizedTask } = newTask;
-  return res.status(201).json(sanitizedTask); // Don't send back userId in response
+  const result = await pool.query(
+    `INSERT INTO tasks (title, is_completed, user_id)
+    VALUES ( $1, $2, $3 ) RETURNING id, title, is_completed`,
+    [value.title, value.isCompleted, global.user_id],
+  );
+
+  const task = result.rows[0];
+  return res.status(201).json(task);
 }
 
 function index(req, res) {
