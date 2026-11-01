@@ -92,24 +92,21 @@ async function update(req, res) {
   return res.status(200).json(updatedTask);
 }
 
-function deleteTask(req, res) {
+async function deleteTask(req, res) {
   const taskId = parseInt(req.params?.id);
   if (isNaN(taskId)) {
     return res.status(400).json({ message: 'Invalid task ID.' });
   }
 
-  const indexOfTaskToDelete = global.tasks.findIndex(
-    (t) => t.id === taskId && t.userId === global.user_id.email,
+  const result = await pool.query(
+    `DELETE FROM tasks WHERE id = $1 AND user_id = $2 RETURNING id, title, is_completed`,
+    [taskId, global.user_id],
   );
-
-  if (indexOfTaskToDelete === -1) {
+  if (result.rowCount === 0) {
     return res.status(404).json({ message: 'No matching task found.' });
   }
-
-  const deletedTask = { ...global.tasks[indexOfTaskToDelete] };
-  global.tasks.splice(indexOfTaskToDelete, 1);
-  const { userId, ...sanitizedTask } = deletedTask;
-  return res.status(200).json(sanitizedTask);
+  const deletedTask = result.rows[0];
+  return res.status(200).json(deletedTask);
 }
 
 module.exports = {
