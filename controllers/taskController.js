@@ -61,7 +61,7 @@ function show(req, res) {
   return res.status(200).json(sanitizedTask);
 }
 
-function update(req, res) {
+async function update(req, res) {
   if (!req.body) {
     req.body = {};
   }
@@ -70,14 +70,26 @@ function update(req, res) {
     return res.status(400).json({ message: 'Unable to update task with the provided data.' });
   }
 
-  const taskId = parseInt(req.params?.id);
-  const task = global.tasks.find((t) => t.id === taskId && t.userId === global.user_id.email);
-  if (!task) {
+  const taskChange = value;
+  let keys = Object.keys(taskChange);
+  keys = keys.map((key) => (key === 'isCompleted' ? 'is_completed' : key));
+  const setClauses = keys.map((key, i) => `${key} = $${i + 1}`).join(', ');
+  const idParm = `$${keys.length + 1}`;
+  const userParm = `$${keys.length + 2}`;
+  const result = await pool.query(
+    `UPDATE tasks SET ${setClauses}
+    WHERE id = ${idParm} AND user_id = ${userParm} RETURNING id, title, is_completed`,
+    [...Object.values(taskChange), req.params.id, global.user_id],
+  );
+  let updatedTask = null;
+  if (result.rowCount > 0) {
+    updatedTask = result.rows[0];
+  }
+
+  if (!updatedTask) {
     return res.status(404).json({ message: 'No matching task found.' });
   }
-  Object.assign(task, value); // Merge the validated patch fields into the stored task
-  const { userId, ...sanitizedTask } = task;
-  return res.status(200).json(sanitizedTask);
+  return res.status(200).json(updatedTask);
 }
 
 function deleteTask(req, res) {
