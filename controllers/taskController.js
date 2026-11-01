@@ -29,7 +29,7 @@ async function create(req, res) {
   );
 
   const task = result.rows[0];
-  return res.status(201).json(task);
+  return res.status(201).json({ ...task, isCompleted: task.is_completed });
 }
 
 async function index(req, res) {
