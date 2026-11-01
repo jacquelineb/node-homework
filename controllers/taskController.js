@@ -32,19 +32,19 @@ async function create(req, res) {
   return res.status(201).json(task);
 }
 
-function index(req, res) {
+async function index(req, res) {
   // Return the tasks for the logged-in user.
-  const userTasks = global.tasks.filter((task) => task.userId === global.user_id.email);
-  if (userTasks.length === 0) {
+  const result = await pool.query(
+    'SELECT id, title, is_completed FROM tasks WHERE user_id = $1',
+    [global.user_id],
+  );
+
+  const tasks = result.rows;
+  if (tasks.length === 0) {
     return res.status(404).json({ message: 'No tasks found.' });
   }
 
-  // Leave the userId field out of the tasks to be sent in the response
-  const sanitizedTasks = userTasks.map((task) => {
-    const { userId, ...sanitizedTask } = task;
-    return sanitizedTask;
-  });
-  return res.status(200).json(sanitizedTasks);
+  return res.status(200).json(tasks);
 }
 
 function show(req, res) {
