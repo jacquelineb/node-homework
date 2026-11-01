@@ -2,6 +2,10 @@ const crypto = require('crypto');
 const util = require('util');
 const scrypt = util.promisify(crypto.scrypt);
 const { userSchema } = require('../validation/userSchema');
+const { Pool } = require('pg');
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
 
 async function hashPassword(password) {
   const salt = crypto.randomBytes(16).toString('hex');
@@ -16,7 +20,7 @@ async function comparePassword(inputPassword, storedHash) {
   return crypto.timingSafeEqual(keyBuffer, derivedKey);
 }
 
-async function register(req, res) {
+async function register(req, res, next) {
   if (!req.body) {
     req.body = {};
   }
@@ -28,25 +32,46 @@ async function register(req, res) {
     });
   }
 
-  const { name, email, password } = value;
-  const hashedPassword = await hashPassword(password);
-  const newUser = { email, name, hashedPassword };
+  let result = null;
+  value.hashed_password = await hashPassword(value.password);
+  // the code to here is like the in-memory version
+  try {
+    result = await pool.query(
+      `INSERT INTO users (email, name, hashed_password)
+      VALUES ($1, $2, $3) RETURNING id, email, name`,
+      [value.email, value.name, value.hashed_password],
+    ); // note that you use a parameterized query
+  } catch (e) {
+    // the email might already be registered
+    if (e.code === '23505') {
+      // this means the unique constraint for email was violated
+      // here you return the 400 and the error message.  Use a return statement, so that
+      return res
+        .status(400)
+        .json({ message: 'Unable to register with the provided credentials.' });
+      // you don't keep going in this function
+    }
+    return next(e); // all other errors get passed to the error handler
+  }
 
-  global.users.push(newUser);
-  global.user_id = newUser;
-  res.status(201).json({
-    name,
-    email,
+  const user = result.rows[0];
+  global.user_id = user.id;
+  return res.status(201).json({
+    name: value.name,
+    email: value.email,
   });
 }
 
 async function logon(req, res) {
   const { email, password } = req.body;
-  const user = global.users.find((usr) => usr.email === email);
-  const goodCredentials = user && (await comparePassword(password, user.hashedPassword));
-
+  const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+  let user = null;
+  if (result.rowCount > 0) {
+    user = result.rows[0];
+  }
+  const goodCredentials = user && (await comparePassword(password, user.hashed_password));
   if (goodCredentials) {
-    global.user_id = user;
+    global.user_id = user.id;
     res.status(200).json({ name: user.name, email });
   } else {
     res.status(401).json({ message: 'Unauthorized' });
