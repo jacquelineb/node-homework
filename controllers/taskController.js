@@ -47,18 +47,24 @@ async function index(req, res) {
   return res.status(200).json(tasks);
 }
 
-function show(req, res) {
+async function show(req, res) {
   const taskId = parseInt(req.params?.id);
   if (isNaN(taskId)) {
     return res.status(400).json({ message: 'Invalid task ID.' });
   }
-  const task = global.tasks.find((t) => t.id === taskId && t.userId === global.user_id.email);
-  if (!task) {
+
+  const result = await pool.query(
+    `SELECT id, title, is_completed FROM tasks
+    WHERE id = $1 AND user_id = $2`,
+    [taskId, global.user_id],
+  );
+
+  if (result.rowCount === 0) {
     return res.status(404).json({ message: 'No matching task found.' });
   }
 
-  const { userId, ...sanitizedTask } = task;
-  return res.status(200).json(sanitizedTask);
+  const task = result.rows[0];
+  return res.status(200).json(task);
 }
 
 async function update(req, res) {
