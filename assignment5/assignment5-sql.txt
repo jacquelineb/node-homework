@@ -36,3 +36,10 @@ RETURNING line_item_id;
 COMMIT;
 
 SELECT * FROM line_items WHERE order_id = 250;
+
+# Task 4: Aggregation with Having
+SELECT first_name, last_name, COUNT(orders.employee_id) AS order_count
+FROM employees JOIN orders ON employees.employee_id = orders.employee_id
+GROUP BY orders.employee_id, first_name, last_name
+HAVING COUNT(orders.employee_id) > 5
+ORDER BY last_name;
