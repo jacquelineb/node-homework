@@ -1,8 +1,5 @@
 const { taskSchema, patchTaskSchema } = require('../validation/taskSchema');
-const { Pool } = require('pg');
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+const pool = require('../db/pg-pool');
 
 async function create(req, res) {
   if (!req.body) {

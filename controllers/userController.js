@@ -2,10 +2,7 @@ const crypto = require('crypto');
 const util = require('util');
 const scrypt = util.promisify(crypto.scrypt);
 const { userSchema } = require('../validation/userSchema');
-const { Pool } = require('pg');
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+const pool = require('../db/pg-pool');
 
 async function hashPassword(password) {
   const salt = crypto.randomBytes(16).toString('hex');
