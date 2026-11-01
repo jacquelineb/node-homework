@@ -10,8 +10,6 @@ const errorHandler = require('./middleware/error-handler');
 const app = express();
 
 global.user_id = null;
-global.users = [];
-global.tasks = [];
 
 app.use(express.json());
 app.use('/api', timeRouter);
