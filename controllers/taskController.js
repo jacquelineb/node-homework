@@ -4,14 +4,6 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-const taskCounter = (() => {
-  let lastTaskNumber = 0;
-  return () => {
-    lastTaskNumber += 1;
-    return lastTaskNumber;
-  };
-})();
-
 async function create(req, res) {
   if (!req.body) {
     req.body = {};
