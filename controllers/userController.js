@@ -30,34 +30,28 @@ async function register(req, res, next) {
     });
   }
 
-  let result = null;
-  value.hashed_password = await hashPassword(value.password);
-  // the code to here is like the in-memory version
+  value.hashedPassword = await hashPassword(value.password);
+  delete value.password;
+  const { name, email, hashedPassword } = value;
+  let user = null;
+  console.log(value);
   try {
-    result = await pool.query(
-      `INSERT INTO users (email, name, hashed_password)
-      VALUES ($1, $2, $3) RETURNING id, email, name`,
-      [value.email, value.name, value.hashed_password],
-    ); // note that you use a parameterized query
-  } catch (e) {
-    // the email might already be registered
-    if (e.code === '23505') {
-      // this means the unique constraint for email was violated
-      // here you return the 400 and the error message.  Use a return statement, so that
+    user = await prisma.user.create({
+      data: { name, email, hashedPassword },
+      select: { name: true, email: true, id: true }, // specify the column values to return
+    });
+  } catch (err) {
+    if (err.name === 'PrismaClientKnownRequestError' && err.code === 'P2002') {
       return res
         .status(400)
-        .json({ message: 'Unable to register with the provided credentials.' });
-      // you don't keep going in this function
+        .json({ message: 'Unable to register - the provided email is already in use.' });
+    } else {
+      return next(err); // the error handler takes care of other errors
     }
-    return next(e); // all other errors get passed to the error handler
   }
 
-  const user = result.rows[0];
   global.user_id = user.id;
-  return res.status(201).json({
-    name: value.name,
-    email: value.email,
-  });
+  return res.status(201).json({ name, email });
 }
 
 async function logon(req, res) {
