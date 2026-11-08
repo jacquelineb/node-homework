@@ -34,7 +34,6 @@ async function register(req, res, next) {
   delete value.password;
   const { name, email, hashedPassword } = value;
   let user = null;
-  console.log(value);
   try {
     user = await prisma.user.create({
       data: { name, email, hashedPassword },
