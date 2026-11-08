@@ -12,17 +12,15 @@ async function create(req, res, next) {
   }
 
   const { title, isCompleted } = value;
-  let newTask = null;
   try {
-    newTask = await prisma.task.create({
+    const newTask = await prisma.task.create({
       data: { title, isCompleted, userId: global.user_id },
       select: { title: true, isCompleted: true, id: true },
     });
+    return res.status(201).json(newTask);
   } catch (err) {
     return next(err);
   }
-
-  return res.status(201).json(newTask);
 }
 
 async function index(req, res) {
@@ -47,21 +45,19 @@ async function show(req, res, next) {
     return res.status(400).json({ message: 'Invalid task ID.' });
   }
 
-  let task = null;
   try {
-    task = await prisma.task.findUnique({
+    const task = await prisma.task.findUnique({
       where: { id: taskId, userId: global.user_id },
       select: { id: true, title: true, isCompleted: true },
     });
+
+    if (task === null) {
+      return res.status(404).json({ message: 'The task was not found.' });
+    }
+    return res.status(200).json(task);
   } catch (err) {
     return next(err); // pass other errors to the global error handler
   }
-
-  if (task === null) {
-    return res.status(404).json({ message: 'The task was not found.' });
-  }
-
-  return res.status(200).json(task);
 }
 
 async function update(req, res, next) {
@@ -74,9 +70,8 @@ async function update(req, res, next) {
     return res.status(400).json({ message: 'Unable to update task with the provided data.' });
   }
 
-  let task = null;
   try {
-    task = await prisma.task.update({
+    const task = await prisma.task.update({
       data: value,
       where: {
         id: taskId,
@@ -84,6 +79,7 @@ async function update(req, res, next) {
       },
       select: { title: true, isCompleted: true, id: true },
     });
+    return res.status(200).json(task);
   } catch (err) {
     if (err.code === 'P2025') {
       return res.status(404).json({ message: 'The task was not found.' });
@@ -91,7 +87,6 @@ async function update(req, res, next) {
       return next(err); // pass other errors to the global error handler
     }
   }
-  return res.status(200).json(task);
 }
 
 async function deleteTask(req, res, next) {
@@ -100,12 +95,12 @@ async function deleteTask(req, res, next) {
     return res.status(400).json({ message: 'Invalid task ID.' });
   }
 
-  let deletedTask = null;
   try {
-    deletedTask = await prisma.task.delete({
+    const deletedTask = await prisma.task.delete({
       where: { id: taskId, userId: global.user_id },
       select: { id: true, title: true, isCompleted: true },
     });
+    return res.status(200).json(deletedTask);
   } catch (err) {
     if (err.code === 'P2025') {
       return res.status(404).json({ message: 'The task was not found.' });
@@ -113,8 +108,6 @@ async function deleteTask(req, res, next) {
       return next(err); // pass other errors to the global error handler
     }
   }
-
-  return res.status(200).json(deletedTask);
 }
 
 module.exports = {
