@@ -1,5 +1,4 @@
 const { taskSchema, patchTaskSchema } = require('../validation/taskSchema');
-const pool = require('../db/pg-pool');
 const prisma = require('../db/prisma');
 
 async function create(req, res, next) {
@@ -95,20 +94,26 @@ async function update(req, res, next) {
   return res.status(200).json(task);
 }
 
-async function deleteTask(req, res) {
+async function deleteTask(req, res, next) {
   const taskId = parseInt(req.params?.id);
   if (isNaN(taskId)) {
     return res.status(400).json({ message: 'Invalid task ID.' });
   }
 
-  const result = await pool.query(
-    `DELETE FROM tasks WHERE id = $1 AND user_id = $2 RETURNING id, title, is_completed`,
-    [taskId, global.user_id],
-  );
-  if (result.rowCount === 0) {
-    return res.status(404).json({ message: 'No matching task found.' });
+  let deletedTask = null;
+  try {
+    deletedTask = await prisma.task.delete({
+      where: { id: taskId, userId: global.user_id },
+      select: { id: true, title: true, isCompleted: true },
+    });
+  } catch (err) {
+    if (err.code === 'P2025') {
+      return res.status(404).json({ message: 'The task was not found.' });
+    } else {
+      return next(err); // pass other errors to the global error handler
+    }
   }
-  const deletedTask = result.rows[0];
+
   return res.status(200).json(deletedTask);
 }
 
