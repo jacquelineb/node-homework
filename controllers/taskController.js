@@ -42,23 +42,26 @@ async function index(req, res) {
   return res.status(200).json(tasks);
 }
 
-async function show(req, res) {
+async function show(req, res, next) {
   const taskId = parseInt(req.params?.id);
   if (isNaN(taskId)) {
     return res.status(400).json({ message: 'Invalid task ID.' });
   }
 
-  const result = await pool.query(
-    `SELECT id, title, is_completed FROM tasks
-    WHERE id = $1 AND user_id = $2`,
-    [taskId, global.user_id],
-  );
-
-  if (result.rowCount === 0) {
-    return res.status(404).json({ message: 'No matching task found.' });
+  let task = null;
+  try {
+    task = await prisma.task.findUnique({
+      where: { id: taskId, userId: global.user_id },
+      select: { id: true, title: true, isCompleted: true },
+    });
+  } catch (err) {
+    return next(err); // pass other errors to the global error handler
   }
 
-  const task = result.rows[0];
+  if (task === null) {
+    return res.status(404).json({ message: 'The task was not found.' });
+  }
+
   return res.status(200).json(task);
 }
 
