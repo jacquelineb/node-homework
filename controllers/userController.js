@@ -3,6 +3,7 @@ const util = require('util');
 const scrypt = util.promisify(crypto.scrypt);
 const { userSchema } = require('../validation/userSchema');
 const pool = require('../db/pg-pool');
+const prisma = require('../db/prisma');
 
 async function hashPassword(password) {
   const salt = crypto.randomBytes(16).toString('hex');
@@ -61,12 +62,8 @@ async function register(req, res, next) {
 
 async function logon(req, res) {
   const { email, password } = req.body;
-  const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-  let user = null;
-  if (result.rowCount > 0) {
-    user = result.rows[0];
-  }
-  const goodCredentials = user && (await comparePassword(password, user.hashed_password));
+  const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+  const goodCredentials = user && (await comparePassword(password, user.hashedPassword));
   if (goodCredentials) {
     global.user_id = user.id;
     res.status(200).json({ name: user.name, email });
