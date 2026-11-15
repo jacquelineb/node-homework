@@ -61,6 +61,17 @@ async function index(req, res) {
     };
   }
 
+  const getOrderBy = (query) => {
+    const validSortFields = ['title', 'priority', 'createdAt', 'id', 'isCompleted'];
+    const sortBy = query.sortBy || 'createdAt';
+    const sortDirection = query.sortDirection === 'asc' ? 'asc' : 'desc';
+
+    if (validSortFields.includes(sortBy)) {
+      return { [sortBy]: sortDirection };
+    }
+    return { createdAt: 'desc' }; // default fallback
+  };
+
   const tasks = await prisma.task.findMany({
     where: whereClause,
     select: {
@@ -78,7 +89,7 @@ async function index(req, res) {
     },
     take: limit, // Limit results
     skip: skip, // Offset for page
-    orderBy: { createdAt: 'desc' },
+    orderBy: getOrderBy(req.query),
   });
 
   // Get total count for pagination metadata
