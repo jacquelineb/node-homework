@@ -31,10 +31,33 @@ async function index(req, res) {
 
   // Build where clause with optional search filter to search by title
   const whereClause = { userId: global.user_id };
-  if (req.query.find) {
+  const { find, isCompleted, priority, min_date, max_date } = req.query;
+  if (find) {
     whereClause.title = {
-      contains: req.query.find, // Matches %find% pattern
+      contains: find, // Matches %find% pattern
       mode: 'insensitive', // Case-insensitive search (ILIKE in PostgreSQL)
+    };
+  }
+
+  if (isCompleted !== undefined) {
+    whereClause.isCompleted = isCompleted === 'true';
+  }
+
+  const validPriorityValues = ['low', 'medium', 'high'];
+  if (validPriorityValues.includes(priority)) {
+    whereClause.priority = priority;
+  }
+
+  if (min_date) {
+    whereClause.createdAt = {
+      gte: new Date(min_date), // Greater than or equal to
+    };
+  }
+
+  if (max_date) {
+    whereClause.createdAt = {
+      ...whereClause.createdAt, //
+      lte: new Date(min_date), // Less than or equal to
     };
   }
 
