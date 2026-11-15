@@ -25,11 +25,32 @@ async function create(req, res, next) {
 
 async function index(req, res) {
   // Return the tasks for the logged-in user.
+  /*
   const tasks = await prisma.task.findMany({
     where: {
       userId: global.user_id,
     },
     select: { title: true, isCompleted: true, id: true },
+  });
+  */
+
+  const tasks = await prisma.task.findMany({
+    where: {
+      userId: global.user_id, // using global.user_id from auth
+    },
+    select: {
+      id: true,
+      title: true,
+      isCompleted: true,
+      priority: true,
+      createdAt: true,
+      User: {
+        select: {
+          name: true,
+          email: true,
+        },
+      },
+    },
   });
 
   if (tasks.length === 0) {
