@@ -11,10 +11,10 @@ async function create(req, res, next) {
     return res.status(400).json({ message: 'Unable to create task.' });
   }
 
-  const { title, isCompleted } = value;
+  const { title, isCompleted, priority } = value;
   try {
     const newTask = await prisma.task.create({
-      data: { title, isCompleted, userId: global.user_id },
+      data: { title, isCompleted, priority, userId: global.user_id },
       select: { title: true, isCompleted: true, id: true, priority: true },
     });
     return res.status(201).json(newTask);
