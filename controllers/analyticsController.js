@@ -65,8 +65,14 @@ async function getUserAnalytics(req, res) {
 
 async function getUsersWithStats(req, res) {
   // Show all users with task statistics
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
+  let page = parseInt(req.query.page) || 1;
+  if (page < 1) {
+    page = 1;
+  }
+  let limit = parseInt(req.query.limit) || 10;
+  if (limit > 100) {
+    limit = 100;
+  }
 
   const usersRaw = await prisma.user.findMany({
     include: {
@@ -116,7 +122,10 @@ async function searchTasks(req, res) {
   if (!searchQuery || searchQuery.trim().length < 2) {
     return res.status(400).json({ error: 'Search query must be at least 2 characters' });
   }
-  const limit = parseInt(req.query.limit) || 20;
+  let limit = parseInt(req.query.limit) || 20;
+  if (limit > 100) {
+    limit = 100;
+  }
 
   const searchPattern = `%${searchQuery}%`;
   const exactMatch = searchQuery;
