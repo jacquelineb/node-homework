@@ -15,7 +15,7 @@ async function getUserAnalytics(req, res) {
     where: { id: userId },
   });
   if (user === null) {
-    return res.status(404).json({ message: 'User does not exists.' });
+    return res.status(404).json({ message: 'User not found.' });
   }
 
   const taskStats = await prisma.task.groupBy({
