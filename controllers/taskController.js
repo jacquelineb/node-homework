@@ -162,7 +162,7 @@ async function update(req, res, next) {
         id: taskId,
         userId: global.user_id,
       },
-      select: { title: true, isCompleted: true, id: true },
+      select: { title: true, isCompleted: true, priority: true, id: true },
     });
     return res.status(200).json(task);
   } catch (err) {
