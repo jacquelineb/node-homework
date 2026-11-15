@@ -123,7 +123,17 @@ async function show(req, res, next) {
   try {
     const task = await prisma.task.findUnique({
       where: { id: taskId, userId: global.user_id },
-      select: { id: true, title: true, isCompleted: true },
+      select: {
+        id: true,
+        title: true,
+        isCompleted: true,
+        priority: true,
+        User: {
+          select: {
+            name: true,
+          },
+        },
+      },
     });
 
     if (task === null) {
