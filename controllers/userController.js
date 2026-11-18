@@ -38,6 +38,11 @@ async function register(req, res, next) {
       // Create user
       const newUser = await tx.user.create({
         data: { name, email, hashedPassword },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
       });
 
       // Create welcome tasks for the user
