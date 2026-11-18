@@ -11,7 +11,7 @@ async function getUserAnalytics(req, res) {
   }
 
   // Check that the user exists in the database
-  const user = prisma.user.findUnique({
+  const user = await prisma.user.findUnique({
     where: { id: userId },
   });
   if (user === null) {
