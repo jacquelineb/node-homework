@@ -32,29 +32,77 @@ async function register(req, res, next) {
   value.hashedPassword = await hashPassword(value.password);
   delete value.password;
   const { name, email, hashedPassword } = value;
-  let user = null;
+
   try {
-    user = await prisma.user.create({
-      data: { name, email, hashedPassword },
-      select: { name: true, email: true, id: true }, // specify the column values to return
+    const result = await prisma.$transaction(async (tx) => {
+      // Create user
+      const newUser = await tx.user.create({
+        data: { name, email, hashedPassword },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      });
+
+      // Create welcome tasks for the user
+      const welcomeTasksData = [
+        {
+          title: 'Complete your profile',
+          userId: newUser.id,
+          priority: 'medium',
+        },
+        {
+          title: 'Add your first task',
+          userId: newUser.id,
+          priority: 'high',
+        },
+        {
+          title: 'Explore the app',
+          userId: newUser.id,
+          priority: 'low',
+        },
+      ];
+      await tx.task.createMany({ data: welcomeTasksData });
+
+      // Fetch the created tasks so we can return them
+      const welcomeTasks = await tx.task.findMany({
+        where: {
+          userId: newUser.id,
+          title: { in: welcomeTasksData.map((t) => t.title) },
+        },
+        select: {
+          id: true,
+          title: true,
+          isCompleted: true,
+          userId: true,
+          priority: true,
+        },
+      });
+      return { user: newUser, welcomeTasks };
     });
-  } catch (err) {
-    if (err.name === 'PrismaClientKnownRequestError' && err.code === 'P2002') {
-      return res
-        .status(400)
-        .json({ message: 'Unable to register - the provided email is already in use.' });
+    global.user_id = result.user.id;
+    return res.status(201).json({
+      user: result.user,
+      welcomeTasks: result.welcomeTasks,
+      transactionStatus: 'success',
+    });
+  } catch (error) {
+    if (error.code === 'P2002') {
+      return res.status(400).json({ error: 'Email already registered' });
     } else {
-      return next(err); // the error handler takes care of other errors
+      return next(error);
     }
   }
-
-  global.user_id = user.id;
-  return res.status(201).json({ name, email });
 }
 
 async function logon(req, res) {
   const { email, password } = req.body;
-  const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+  const user = await prisma.user.findUnique({
+    where: {
+      email: email.toLowerCase(),
+    },
+  });
   const goodCredentials = user && (await comparePassword(password, user.hashedPassword));
   if (goodCredentials) {
     global.user_id = user.id;
