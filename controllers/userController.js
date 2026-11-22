@@ -1,8 +1,27 @@
+const { randomUUID } = require('crypto');
+const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const util = require('util');
 const scrypt = util.promisify(crypto.scrypt);
 const { userSchema } = require('../validation/userSchema');
 const prisma = require('../db/prisma');
+
+const cookieFlags = (req) => {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production', // only when HTTPS is available
+    sameSite: 'Strict',
+  };
+};
+
+const setJwtCookie = (req, res, user) => {
+  // Sign JWT
+  const payload = { id: user.id, csrfToken: randomUUID() };
+  const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' }); // 1 hour expiration
+  // Set cookie.  Note that the cookie flags have to be different in production and in test.
+  res.cookie('jwt', token, { ...cookieFlags(req), maxAge: 3600000 }); // 1 hour expiration
+  return payload.csrfToken; // this is needed in the body returned by logon() or register()
+};
 
 async function hashPassword(password) {
   const salt = crypto.randomBytes(16).toString('hex');
@@ -81,11 +100,12 @@ async function register(req, res, next) {
       });
       return { user: newUser, welcomeTasks };
     });
-    global.user_id = result.user.id;
+    const csrfToken = setJwtCookie(req, res, result.user);
     return res.status(201).json({
       user: result.user,
       welcomeTasks: result.welcomeTasks,
       transactionStatus: 'success',
+      csrfToken,
     });
   } catch (error) {
     if (error.code === 'P2002') {
@@ -105,15 +125,15 @@ async function logon(req, res) {
   });
   const goodCredentials = user && (await comparePassword(password, user.hashedPassword));
   if (goodCredentials) {
-    global.user_id = user.id;
-    res.status(200).json({ name: user.name, email });
+    const csrfToken = setJwtCookie(req, res, user);
+    res.status(200).json({ name: user.name, email, csrfToken });
   } else {
     res.status(401).json({ message: 'Unauthorized' });
   }
 }
 
 function logoff(req, res) {
-  global.user_id = null;
+  res.clearCookie('jwt', cookieFlags(req));
   res.sendStatus(200);
 }
 
