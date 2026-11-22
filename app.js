@@ -1,4 +1,8 @@
 const express = require('express');
+const helmet = require('helmet');
+const { xss } = require('express-xss-sanitizer');
+const rateLimiter = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
 const prisma = require('./db/prisma');
 const timeRouter = require('./routes/timeRoutes');
 const userRouter = require('./routes/userRoutes');
@@ -8,12 +12,18 @@ const notFound = require('./middleware/not-found');
 const errorHandler = require('./middleware/error-handler');
 
 const app = express();
-const cookieParser = require('cookie-parser');
+
+app.set('trust proxy', 1);
+app.use(
+  rateLimiter({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+  }),
+);
+app.use(helmet());
 app.use(cookieParser());
-
-global.user_id = null;
-
 app.use(express.json());
+app.use(xss());
 app.use('/api', timeRouter);
 app.use('/api/users', userRouter);
 app.use('/api/tasks', taskRouter);
