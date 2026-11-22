@@ -4,7 +4,6 @@ const timeRouter = require('./routes/timeRoutes');
 const userRouter = require('./routes/userRoutes');
 const taskRouter = require('./routes/taskRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
-const jwtMiddleware = require('./middleware/jwtMiddleware');
 const notFound = require('./middleware/not-found');
 const errorHandler = require('./middleware/error-handler');
 
@@ -17,7 +16,6 @@ global.user_id = null;
 app.use(express.json());
 app.use('/api', timeRouter);
 app.use('/api/users', userRouter);
-// app.use('/api/tasks', jwtMiddleware, taskRouter);
 app.use('/api/tasks', taskRouter);
 app.use('/api/analytics', analyticsRoutes);
 
