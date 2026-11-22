@@ -6,7 +6,7 @@ async function getUserAnalytics(req, res) {
     return res.status(400).json({ message: 'Invalid user id.' });
   }
 
-  if (userId !== global.user_id) {
+  if (userId !== req.user.id) {
     return res.status(403).json({ message: 'Forbidden' });
   }
 
