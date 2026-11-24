@@ -1,22 +1,33 @@
 const express = require('express');
+const helmet = require('helmet');
+const { xss } = require('express-xss-sanitizer');
+const rateLimiter = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
 const prisma = require('./db/prisma');
 const timeRouter = require('./routes/timeRoutes');
 const userRouter = require('./routes/userRoutes');
 const taskRouter = require('./routes/taskRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
-const authMiddleware = require('./middleware/auth');
 const notFound = require('./middleware/not-found');
 const errorHandler = require('./middleware/error-handler');
 
 const app = express();
 
-global.user_id = null;
-
+app.set('trust proxy', 1);
+app.use(
+  rateLimiter({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+  }),
+);
+app.use(helmet());
+app.use(cookieParser());
 app.use(express.json());
+app.use(xss());
 app.use('/api', timeRouter);
 app.use('/api/users', userRouter);
-app.use('/api/tasks', authMiddleware, taskRouter);
-app.use('/api/analytics', authMiddleware, analyticsRoutes);
+app.use('/api/tasks', taskRouter);
+app.use('/api/analytics', analyticsRoutes);
 
 app.get('/', (req, res) => {
   res.send('Hello, World!');
